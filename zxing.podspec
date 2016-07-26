@@ -1,10 +1,10 @@
 Pod::Spec.new do |s|
   s.name                        = "zxing"
-  s.version                     = "2.3.0"
+  s.version                     = "2.3.0-fixed"
   s.summary                     = "Multi-format 1D/2D barcode image processing library."
   s.homepage                    = "http://code.google.com/p/zxing/"
   s.author                      = "ZXing team (http://code.google.com/p/zxing/people/list)"
-  s.source                      = { :git => "https://github.com/lionheart/zxing.git", :tag => "zxing-2.3.1" }
+  s.source                      = { :git => "https://github.com/lionheart/zxing.git", :tag => "zxing-2.3.0-fixed" }
   s.requires_arc                = false
 
 # workaround for a missing import in objc/src/ZXing/ZXImage.mm
