@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name                        = "zxing"
-  s.version                     = "2.3.0"
+  s.version                     = "2.3.1"
   s.summary                     = "Multi-format 1D/2D barcode image processing library."
   s.homepage                    = "http://code.google.com/p/zxing/"
   s.author                      = "ZXing team (http://code.google.com/p/zxing/people/list)"
