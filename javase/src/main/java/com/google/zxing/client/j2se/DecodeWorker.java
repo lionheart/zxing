@@ -151,8 +151,7 @@ final class DecodeWorker implements Callable<Integer> {
       System.out.println(uri + ": Success");
     } else {
       StringWriter output = new StringWriter();
-      for (int resultIndex = 0; resultIndex < results.length; resultIndex++) {
-        Result result = results[resultIndex];
+      for (Result result : results) {
         ParsedResult parsedResult = ResultParser.parseResult(result);
         output.write(uri +
             " (format: " + result.getBarcodeFormat() +
@@ -161,17 +160,19 @@ final class DecodeWorker implements Callable<Integer> {
             result.getText() + "\n" +
             "Parsed result:\n" +
             parsedResult.getDisplayResult() + "\n");
-        output.write("Found " + result.getResultPoints().length + " result points.\n");
-        for (int pointIndex = 0; pointIndex < result.getResultPoints().length; pointIndex++) {
-          ResultPoint rp = result.getResultPoints()[pointIndex];
-          output.write("  Point " + pointIndex + ": (" + rp.getX() + ',' + rp.getY() + ')');
-          if (pointIndex != result.getResultPoints().length - 1) {
-            output.write('\n');
+        ResultPoint[] resultPoints = result.getResultPoints();
+        int numResultPoints = resultPoints.length;
+        output.write("Found " + numResultPoints + " result points.\n");
+        for (int pointIndex = 0; pointIndex < numResultPoints; pointIndex++) {
+          ResultPoint rp = resultPoints[pointIndex];
+          if (rp != null) {
+            output.write("  Point " + pointIndex + ": (" + rp.getX() + ',' + rp.getY() + ')');
+            if (pointIndex != numResultPoints - 1) {
+              output.write('\n');
+            }
           }
         }
-        if (resultIndex != results.length - 1) {
-          output.write('\n');
-        }
+        output.write('\n');
       }
       System.out.println(output);
     }

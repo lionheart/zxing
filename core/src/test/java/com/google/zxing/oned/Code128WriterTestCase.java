@@ -16,6 +16,7 @@
 
 package com.google.zxing.oned;
 
+import com.google.zxing.common.BitMatrixTestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,8 +34,10 @@ public class Code128WriterTestCase extends Assert {
   private static final String FNC2 = "11110101000";
   private static final String FNC3 = "10111100010";
   private static final String FNC4 = "10111101110";
+  private static final String START_CODE_A = "11010000100";
   private static final String START_CODE_B = "11010010000";
   private static final String START_CODE_C = "11010011100";
+  private static final String SWITCH_CODE_A = "11101011110";
   private static final String SWITCH_CODE_B = "10111101110";
   private static final String QUIET_SPACE = "00000";
   private static final String STOP = "1100011101011";
@@ -43,7 +46,7 @@ public class Code128WriterTestCase extends Assert {
   private Code128Reader reader;
 
   @Before
-  public void setup() {
+  public void setUp() {
     writer = new Code128Writer();
     reader = new Code128Reader();
   }
@@ -56,7 +59,7 @@ public class Code128WriterTestCase extends Assert {
 
     BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
 
-    String actual = matrixToString(result);
+    String actual = BitMatrixTestCase.matrixToString(result);
     assertEquals(expected, actual);
   }
 
@@ -68,7 +71,7 @@ public class Code128WriterTestCase extends Assert {
 
     BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
 
-    String actual = matrixToString(result);
+    String actual = BitMatrixTestCase.matrixToString(result);
     assertEquals(expected, actual);
   }
 
@@ -80,7 +83,7 @@ public class Code128WriterTestCase extends Assert {
 
     BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
 
-    String actual = matrixToString(result);
+    String actual = BitMatrixTestCase.matrixToString(result);
     assertEquals(expected, actual);
   }
 
@@ -104,15 +107,30 @@ public class Code128WriterTestCase extends Assert {
 
     BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
 
-    String actual = matrixToString(result);
+    String actual = BitMatrixTestCase.matrixToString(result);
     assertEquals(expected, actual);
   }
+  
+  @Test
+  public void testEncodeSwitchBetweenCodesetsAAndB() throws Exception {
+    // start with A switch to B and back to A
+    //                                                      "\0"            "A"             "B"             Switch to B     "a"             "b"             Switch to A     "\u0010"        check digit
+    testEncode("\0ABab\u0010", QUIET_SPACE + START_CODE_A + "10100001100" + "10100011000" + "10001011000" + SWITCH_CODE_B + "10010110000" + "10010000110" + SWITCH_CODE_A + "10100111100" + "11001110100" + STOP + QUIET_SPACE);
 
-  private static String matrixToString(BitMatrix result) {
-    StringBuilder builder = new StringBuilder(result.getWidth());
-    for (int i = 0; i < result.getWidth(); i++) {
-      builder.append(result.get(i, 0) ? '1' : '0');
-    }
-    return builder.toString();
+    // start with B switch to A and back to B
+    //                                                "a"             "b"             Switch to A     "\0             "Switch to B"   "a"             "b"             check digit
+    testEncode("ab\0ab", QUIET_SPACE + START_CODE_B + "10010110000" + "10010000110" + SWITCH_CODE_A + "10100001100" + SWITCH_CODE_B + "10010110000" + "10010000110" + "11010001110" + STOP + QUIET_SPACE);
+  }
+  
+  private void testEncode(String toEncode, String expected) throws Exception {
+    BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
+
+    String actual = BitMatrixTestCase.matrixToString(result);
+    assertEquals(toEncode, expected, actual);
+    
+    BitArray row = result.getRow(0, null);
+    Result rtResult = reader.decodeRow(0, row, null);
+    String actualRoundtripResultText = rtResult.getText();
+    assertEquals(toEncode, actualRoundtripResultText);
   }
 }

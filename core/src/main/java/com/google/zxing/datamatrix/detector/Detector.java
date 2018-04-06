@@ -137,16 +137,16 @@ public final class Detector {
     // The top right point is actually the corner of a module, which is one of the two black modules
     // adjacent to the white module at the top right. Tracing to that corner from either the top left
     // or bottom right should work here.
-    
+
     int dimensionTop = transitionsBetween(topLeft, topRight).getTransitions();
     int dimensionRight = transitionsBetween(bottomRight, topRight).getTransitions();
-    
+
     if ((dimensionTop & 0x01) == 1) {
       // it can't be odd, so, round... up?
       dimensionTop++;
     }
     dimensionTop += 2;
-    
+
     if ((dimensionRight & 0x01) == 1) {
       // it can't be odd, so, round... up?
       dimensionRight++;
@@ -156,7 +156,7 @@ public final class Detector {
     BitMatrix bits;
     ResultPoint correctedTopRight;
 
-    // Rectanguar symbols are 6x16, 6x28, 10x24, 10x32, 14x32, or 14x44. If one dimension is more
+    // Rectangular symbols are 6x16, 6x28, 10x24, 10x32, 14x32, or 14x44. If one dimension is more
     // than twice the other, it's certainly rectangular, but to cut a bit more slack we accept it as
     // rectangular if the bigger side is at least 7/4 times the other:
     if (4 * dimensionTop >= 7 * dimensionRight || 4 * dimensionRight >= 7 * dimensionTop) {
@@ -182,10 +182,10 @@ public final class Detector {
       }
 
       bits = sampleGrid(image, topLeft, bottomLeft, bottomRight, correctedTopRight, dimensionTop, dimensionRight);
-          
+
     } else {
       // The matrix is square
-        
+
       int dimension = Math.min(dimensionRight, dimensionTop);
       // correct top right point to match the white module
       correctedTopRight = correctTopRight(bottomLeft, bottomRight, topLeft, topRight, dimension);
@@ -419,7 +419,7 @@ public final class Detector {
     int getTransitions() {
       return transitions;
     }
-    
+
     @Override
     public String toString() {
       return from + "/" + to + '/' + transitions;
