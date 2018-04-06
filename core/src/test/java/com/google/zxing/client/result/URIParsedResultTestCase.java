@@ -61,6 +61,7 @@ public final class URIParsedResultTestCase extends Assert {
     doTestNotUri("http://google.com?q=foo bar");
     doTestNotUri("12756.501");
     doTestNotUri("google.50");
+    doTestNotUri("foo.bar.bing.baz.foo.bar.bing.baz");
   }
 
   @Test
@@ -104,6 +105,7 @@ public final class URIParsedResultTestCase extends Assert {
                "0ZAKOAB32/.8:J501GJJTTWOA+5/6$MIYBERPZ41NJ6-WSG/*Z48ZH*LSAOEM*IXP81L:$F*W08Z60CR*C*P.JEEVI1F02J07L6+" +
                "W4L1G$/IC*$16GK6A+:I1-:LJ:Z-P3NW6Z6ADFB-F2AKE$2DWN23GYCYEWX9S8L+LF$VXEKH7/R48E32PU+A:9H:8O5",
            null);
+    doTest("opc.tcp://test.samplehost.com:4841", "opc.tcp://test.samplehost.com:4841", null);
   }
 
   private static void doTest(String contents, String uri, String title) {

@@ -64,7 +64,7 @@ public enum ResultMetadataType {
    * For some products, indicates the suggested retail price in the barcode as a
    * formatted {@link String}.
    */
-  SUGGESTED_PRICE ,
+  SUGGESTED_PRICE,
 
   /**
    * For some products, the possible country of manufacture as a {@link String} denoting the
@@ -81,5 +81,17 @@ public enum ResultMetadataType {
    * PDF417-specific metadata
    */
   PDF417_EXTRA_METADATA,
+
+  /**
+   * If the code format supports structured append and the current scanned code is part of one then the
+   * sequence number is given with it.
+   */
+  STRUCTURED_APPEND_SEQUENCE,
+
+  /**
+   * If the code format supports structured append and the current scanned code is part of one then the
+   * parity is given with it.
+   */
+  STRUCTURED_APPEND_PARITY,
 
 }

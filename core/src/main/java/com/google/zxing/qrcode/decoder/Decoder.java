@@ -50,22 +50,14 @@ public final class Decoder {
    * "true" is taken to mean a black module.</p>
    *
    * @param image booleans representing white/black QR Code modules
+   * @param hints decoding hints that should be used to influence decoding
    * @return text and bytes encoded within the QR Code
    * @throws FormatException if the QR Code cannot be decoded
    * @throws ChecksumException if error correction fails
    */
   public DecoderResult decode(boolean[][] image, Map<DecodeHintType,?> hints)
       throws ChecksumException, FormatException {
-    int dimension = image.length;
-    BitMatrix bits = new BitMatrix(dimension);
-    for (int i = 0; i < dimension; i++) {
-      for (int j = 0; j < dimension; j++) {
-        if (image[i][j]) {
-          bits.set(j, i);
-        }
-      }
-    }
-    return decode(bits, hints);
+    return decode(BitMatrix.parse(image), hints);
   }
 
   public DecoderResult decode(BitMatrix bits) throws ChecksumException, FormatException {
@@ -76,6 +68,7 @@ public final class Decoder {
    * <p>Decodes a QR Code represented as a {@link BitMatrix}. A 1 or "true" is taken to mean a black module.</p>
    *
    * @param bits booleans representing white/black QR Code modules
+   * @param hints decoding hints that should be used to influence decoding
    * @return text and bytes encoded within the QR Code
    * @throws FormatException if the QR Code cannot be decoded
    * @throws ChecksumException if error correction fails
@@ -125,17 +118,7 @@ public final class Decoder {
 
       return result;
 
-    } catch (FormatException e) {
-      // Throw the exception from the original reading
-      if (fe != null) {
-        throw fe;
-      }
-      if (ce != null) {
-        throw ce;
-      }
-      throw e;
-
-    } catch (ChecksumException e) {
+    } catch (FormatException | ChecksumException e) {
       // Throw the exception from the original reading
       if (fe != null) {
         throw fe;
@@ -195,9 +178,8 @@ public final class Decoder {
     for (int i = 0; i < numCodewords; i++) {
       codewordsInts[i] = codewordBytes[i] & 0xFF;
     }
-    int numECCodewords = codewordBytes.length - numDataCodewords;
     try {
-      rsDecoder.decode(codewordsInts, numECCodewords);
+      rsDecoder.decode(codewordsInts, codewordBytes.length - numDataCodewords);
     } catch (ReedSolomonException ignored) {
       throw ChecksumException.getChecksumInstance();
     }

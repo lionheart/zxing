@@ -27,7 +27,8 @@
 package com.google.zxing.oned.rss.expanded;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,7 @@ import javax.imageio.ImageIO;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.BufferedImageLuminanceSource;
 import com.google.zxing.NotFoundException;
+import com.google.zxing.common.AbstractBlackBoxTestCase;
 import com.google.zxing.common.BitArray;
 import com.google.zxing.common.GlobalHistogramBinarizer;
 import com.google.zxing.oned.rss.DataCharacter;
@@ -52,19 +54,11 @@ public final class RSSExpandedInternalTestCase extends Assert {
 
   @Test
   public void testFindFinderPatterns() throws Exception {
-
-    String path = "src/test/resources/blackbox/rssexpanded-1/2.png";
-    File file = new File(path);
-    if (!file.exists()) {
-      // Support running from project root too
-      file = new File("core", path);
-    }
-
-    BufferedImage image = ImageIO.read(file);
+    BufferedImage image = readImage("2.png");
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     int rowNumber = binaryMap.getHeight() / 2;
     BitArray row = binaryMap.getBlackRow(rowNumber, null);
-    List<ExpandedPair> previousPairs = new ArrayList<ExpandedPair>();
+    List<ExpandedPair> previousPairs = new ArrayList<>();
 
     RSSExpandedReader rssExpandedReader = new RSSExpandedReader();
     ExpandedPair pair1 = rssExpandedReader.retrieveNextPair(row, previousPairs, rowNumber);
@@ -89,26 +83,18 @@ public final class RSSExpandedInternalTestCase extends Assert {
       rssExpandedReader.retrieveNextPair(row, previousPairs, rowNumber);
       //   the previous was the last pair
       fail(NotFoundException.class.getName() + " expected");
-    }catch(NotFoundException nfe){
+    } catch (NotFoundException nfe) {
       // ok
     }
   }
 
   @Test
   public void testRetrieveNextPairPatterns() throws Exception {
-
-    String path = "src/test/resources/blackbox/rssexpanded-1/3.png";
-    File file = new File(path);
-    if (!file.exists()) {
-      // Support running from project root too
-      file = new File("core", path);
-    }
-
-    BufferedImage image = ImageIO.read(file);
+    BufferedImage image = readImage("3.png");
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     int rowNumber = binaryMap.getHeight() / 2;
     BitArray row = binaryMap.getBlackRow(rowNumber, null);
-    List<ExpandedPair> previousPairs = new ArrayList<ExpandedPair>();
+    List<ExpandedPair> previousPairs = new ArrayList<>();
 
     RSSExpandedReader rssExpandedReader = new RSSExpandedReader();
     ExpandedPair pair1 = rssExpandedReader.retrieveNextPair(row, previousPairs, rowNumber);
@@ -126,15 +112,7 @@ public final class RSSExpandedInternalTestCase extends Assert {
 
   @Test
   public void testDecodeCheckCharacter() throws Exception {
-
-    String path = "src/test/resources/blackbox/rssexpanded-1/3.png";
-    File file = new File(path);
-    if (!file.exists()) {
-      // Support running from project root too
-      file = new File("core", path);
-    }
-
-    BufferedImage image = ImageIO.read(file);
+    BufferedImage image = readImage("3.png");
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     BitArray row = binaryMap.getBlackRow(binaryMap.getHeight() / 2, null);
 
@@ -150,15 +128,7 @@ public final class RSSExpandedInternalTestCase extends Assert {
 
   @Test
   public void testDecodeDataCharacter() throws Exception {
-
-    String path = "src/test/resources/blackbox/rssexpanded-1/3.png";
-    File file = new File(path);
-    if (!file.exists()) {
-      // Support running from project root too
-      file = new File("core", path);
-    }
-
-    BufferedImage image = ImageIO.read(file);
+    BufferedImage image = readImage("3.png");
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     BitArray row = binaryMap.getBlackRow(binaryMap.getHeight() / 2, null);
 
@@ -172,4 +142,10 @@ public final class RSSExpandedInternalTestCase extends Assert {
     assertEquals(19, dataCharacter.getValue());
     assertEquals(1007, dataCharacter.getChecksumPortion());
   }
+
+  private static BufferedImage readImage(String fileName) throws IOException {
+    Path path = AbstractBlackBoxTestCase.buildTestBase("src/test/resources/blackbox/rssexpanded-1/").resolve(fileName);
+    return ImageIO.read(path.toFile());
+  }
+
 }

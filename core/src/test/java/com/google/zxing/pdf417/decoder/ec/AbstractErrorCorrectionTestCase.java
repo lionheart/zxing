@@ -16,9 +16,9 @@
 
 package com.google.zxing.pdf417.decoder.ec;
 
+import com.google.zxing.common.reedsolomon.ReedSolomonTestCase;
 import org.junit.Assert;
 
-import java.security.SecureRandom;
 import java.util.BitSet;
 import java.util.Random;
 
@@ -28,19 +28,9 @@ import java.util.Random;
 abstract class AbstractErrorCorrectionTestCase extends Assert {
 
   static void corrupt(int[] received, int howMany, Random random) {
-    BitSet corrupted = new BitSet(received.length);
-    for (int j = 0; j < howMany; j++) {
-      int location = random.nextInt(received.length);
-      if (corrupted.get(location)) {
-        j--;
-      } else {
-        corrupted.set(location);
-        received[location] = random.nextInt(929);
-      }
-    }
+    ReedSolomonTestCase.corrupt(received, howMany, random, 929);
   }
 
-  /*
   static int[] erase(int[] received, int howMany, Random random) {
     BitSet erased = new BitSet(received.length);
     int[] erasures = new int[howMany];
@@ -57,22 +47,9 @@ abstract class AbstractErrorCorrectionTestCase extends Assert {
     }
     return erasures;
   }
-   */
 
   static Random getRandom() {
-    return new SecureRandom(new byte[] {(byte) 0xDE, (byte) 0xAD, (byte) 0xBE, (byte) 0xEF});
+    return new Random(0xDEADBEEF);
   }
-
-  /*
-  static void assertArraysEqual(int[] expected,
-                                int expectedOffset,
-                                int[] actual,
-                                int actualOffset,
-                                int length) {
-    for (int i = 0; i < length; i++) {
-      assertEquals(expected[expectedOffset + i], actual[actualOffset + i]);
-    }
-  }
-   */
 
 }

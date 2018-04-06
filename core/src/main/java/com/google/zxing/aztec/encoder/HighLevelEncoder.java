@@ -155,7 +155,7 @@ public final class HighLevelEncoder {
   }
 
   /**
-   * Convert the text represented by this High Level Encoder into a BitArray.
+   * @return text represented by this encoder encoded as a {@link BitArray}
    */
   public BitArray encode() {
     Collection<State> states = Collections.singletonList(State.INITIAL_STATE);
@@ -163,19 +163,19 @@ public final class HighLevelEncoder {
       int pairCode;
       int nextChar = index + 1 < text.length ? text[index + 1] : 0;
       switch (text[index]) {
-        case '\r':  
-          pairCode = nextChar == '\n' ? 2 : 0; 
+        case '\r':
+          pairCode = nextChar == '\n' ? 2 : 0;
           break;
-        case '.' :  
-          pairCode = nextChar == ' '  ? 3 : 0; 
+        case '.' :
+          pairCode = nextChar == ' ' ? 3 : 0;
           break;
-        case ',' :  
-          pairCode = nextChar == ' ' ? 4 : 0; 
+        case ',' :
+          pairCode = nextChar == ' ' ? 4 : 0;
           break;
-        case ':' :  
-          pairCode = nextChar == ' ' ? 5 : 0; 
+        case ':' :
+          pairCode = nextChar == ' ' ? 5 : 0;
           break;
-        default:    
+        default:
           pairCode = 0;
       }
       if (pairCode > 0) {
@@ -203,7 +203,7 @@ public final class HighLevelEncoder {
   // for the new character, merging the results, and then removing the
   // non-optimal states.
   private Collection<State> updateStateListForChar(Iterable<State> states, int index) {
-    Collection<State> result = new LinkedList<State>();
+    Collection<State> result = new LinkedList<>();
     for (State state : states) {
       updateStateForChar(state, index, result);
     }
@@ -230,15 +230,15 @@ public final class HighLevelEncoder {
           // any other mode except possibly digit (which uses only 4 bits).  Any
           // other latch would be equally successful *after* this character, and
           // so wouldn't save any bits.
-          State latch_state = stateNoBinary.latchAndAppend(mode, charInMode);
-          result.add(latch_state);
+          State latchState = stateNoBinary.latchAndAppend(mode, charInMode);
+          result.add(latchState);
         }
         // Try generating the character by switching to its mode.
         if (!charInCurrentTable && SHIFT_TABLE[state.getMode()][mode] >= 0) {
           // It never makes sense to temporarily shift to another mode if the
           // character exists in the current mode.  That can never save bits.
-          State shift_state = stateNoBinary.shiftAndAppend(mode, charInMode);
-          result.add(shift_state);
+          State shiftState = stateNoBinary.shiftAndAppend(mode, charInMode);
+          result.add(shiftState);
         }
       }
     }
@@ -252,7 +252,7 @@ public final class HighLevelEncoder {
   }
 
   private static Collection<State> updateStateListForPair(Iterable<State> states, int index, int pairCode) {
-    Collection<State> result = new LinkedList<State>();
+    Collection<State> result = new LinkedList<>();
     for (State state : states) {
       updateStateForPair(state, index, pairCode, result);
     }
@@ -270,10 +270,10 @@ public final class HighLevelEncoder {
     }
     if (pairCode == 3 || pairCode == 4) {
       // both characters are in DIGITS.  Sometimes better to just add two digits
-      State digit_state = stateNoBinary
+      State digitState = stateNoBinary
           .latchAndAppend(MODE_DIGIT, 16 - pairCode)  // period or comma in DIGIT
           .latchAndAppend(MODE_DIGIT, 1);             // space in DIGIT
-      result.add(digit_state);
+      result.add(digitState);
     }
     if (state.getBinaryShiftByteCount() > 0) {
       // It only makes sense to do the characters as binary if we're already
@@ -284,10 +284,10 @@ public final class HighLevelEncoder {
   }
 
   private static Collection<State> simplifyStates(Iterable<State> states) {
-    List<State> result = new LinkedList<State>();
+    List<State> result = new LinkedList<>();
     for (State newState : states) {
       boolean add = true;
-      for (Iterator<State> iterator = result.iterator(); iterator.hasNext(); ) {
+      for (Iterator<State> iterator = result.iterator(); iterator.hasNext();) {
         State oldState = iterator.next();
         if (oldState.isBetterThanOrEqualTo(newState)) {
           add = false;

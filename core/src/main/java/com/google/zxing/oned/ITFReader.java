@@ -44,13 +44,15 @@ import java.util.Map;
  */
 public final class ITFReader extends OneDReader {
 
-  private static final int MAX_AVG_VARIANCE = (int) (PATTERN_MATCH_RESULT_SCALE_FACTOR * 0.42f);
-  private static final int MAX_INDIVIDUAL_VARIANCE = (int) (PATTERN_MATCH_RESULT_SCALE_FACTOR * 0.78f);
+  private static final float MAX_AVG_VARIANCE = 0.38f;
+  private static final float MAX_INDIVIDUAL_VARIANCE = 0.5f;
 
-  private static final int W = 3; // Pixel width of a wide line
+  private static final int W = 3; // Pixel width of a 3x wide line
+  private static final int w = 2; // Pixel width of a 2x wide line
   private static final int N = 1; // Pixed width of a narrow line
 
-  private static final int[] DEFAULT_ALLOWED_LENGTHS = { 48, 44, 24, 20, 18, 16, 14, 12, 10, 8, 6 };
+  /** Valid ITF lengths. Anything longer than the largest value is also allowed. */
+  private static final int[] DEFAULT_ALLOWED_LENGTHS = {6, 8, 10, 12, 14};
 
   // Stores the actual narrow line width of the image being decoded.
   private int narrowLineWidth = -1;
@@ -62,12 +64,27 @@ public final class ITFReader extends OneDReader {
    * searching for the END_PATTERN
    */
   private static final int[] START_PATTERN = {N, N, N, N};
-  private static final int[] END_PATTERN_REVERSED = {N, N, W};
+  private static final int[][] END_PATTERN_REVERSED = {
+      {N, N, w}, // 2x
+      {N, N, W}  // 3x
+  };
+
+  // See ITFWriter.PATTERNS
 
   /**
    * Patterns of Wide / Narrow lines to indicate each digit
    */
-  static final int[][] PATTERNS = {
+  private static final int[][] PATTERNS = {
+      {N, N, w, w, N}, // 0
+      {w, N, N, N, w}, // 1
+      {N, w, N, N, w}, // 2
+      {w, w, N, N, N}, // 3
+      {N, N, w, N, w}, // 4
+      {w, N, w, N, N}, // 5
+      {N, w, w, N, N}, // 6
+      {N, N, N, w, w}, // 7
+      {w, N, N, w, N}, // 8
+      {N, w, N, w, N}, // 9
       {N, N, W, W, N}, // 0
       {W, N, N, N, W}, // 1
       {N, W, N, N, W}, // 2
@@ -102,14 +119,21 @@ public final class ITFReader extends OneDReader {
     }
 
     // To avoid false positives with 2D barcodes (and other patterns), make
-    // an assumption that the decoded string must be 6, 10 or 14 digits.
+    // an assumption that the decoded string must be a 'standard' length if it's short
     int length = resultString.length();
     boolean lengthOK = false;
+    int maxAllowedLength = 0;
     for (int allowedLength : allowedLengths) {
       if (length == allowedLength) {
         lengthOK = true;
         break;
       }
+      if (allowedLength > maxAllowedLength) {
+        maxAllowedLength = allowedLength;
+      }
+    }
+    if (!lengthOK && length > maxAllowedLength) {
+      lengthOK = true;
     }
     if (!lengthOK) {
       throw FormatException.getFormatInstance();
@@ -118,8 +142,8 @@ public final class ITFReader extends OneDReader {
     return new Result(
         resultString,
         null, // no natural byte representation for these barcodes
-        new ResultPoint[] { new ResultPoint(startRange[1], (float) rowNumber),
-                            new ResultPoint(endRange[0], (float) rowNumber)},
+        new ResultPoint[] {new ResultPoint(startRange[1], rowNumber),
+                           new ResultPoint(endRange[0], rowNumber)},
         BarcodeFormat.ITF);
   }
 
@@ -149,7 +173,7 @@ public final class ITFReader extends OneDReader {
       recordPattern(row, payloadStart, counterDigitPair);
       // Split them into each array
       for (int k = 0; k < 5; k++) {
-        int twoK = k << 1;
+        int twoK = 2 * k;
         counterBlack[k] = counterDigitPair[twoK];
         counterWhite[k] = counterDigitPair[twoK + 1];
       }
@@ -171,16 +195,15 @@ public final class ITFReader extends OneDReader {
    * @param row row of black/white values to search
    * @return Array, containing index of start of 'start block' and end of
    *         'start block'
-   * @throws NotFoundException
    */
-  int[] decodeStart(BitArray row) throws NotFoundException {
+  private int[] decodeStart(BitArray row) throws NotFoundException {
     int endStart = skipWhiteSpace(row);
     int[] startPattern = findGuardPattern(row, endStart, START_PATTERN);
 
     // Determine the width of a narrow line in pixels. We can do this by
     // getting the width of the start pattern and dividing by 4 because its
     // made up of 4 narrow lines.
-    this.narrowLineWidth = (startPattern[1] - startPattern[0]) >> 2;
+    this.narrowLineWidth = (startPattern[1] - startPattern[0]) / 4;
 
     validateQuietZone(row, startPattern[0]);
 
@@ -200,7 +223,7 @@ public final class ITFReader extends OneDReader {
    *
    * @param row bit array representing the scanned barcode.
    * @param startPattern index into row of the start or end pattern.
-   * @throws NotFoundException if the quiet zone cannot be found, a ReaderException is thrown.
+   * @throws NotFoundException if the quiet zone cannot be found
    */
   private void validateQuietZone(BitArray row, int startPattern) throws NotFoundException {
 
@@ -244,16 +267,20 @@ public final class ITFReader extends OneDReader {
    * @param row row of black/white values to search
    * @return Array, containing index of start of 'end block' and end of 'end
    *         block'
-   * @throws NotFoundException
    */
-  int[] decodeEnd(BitArray row) throws NotFoundException {
+  private int[] decodeEnd(BitArray row) throws NotFoundException {
 
     // For convenience, reverse the row and then
     // search from 'the start' for the end block
     row.reverse();
     try {
       int endStart = skipWhiteSpace(row);
-      int[] endPattern = findGuardPattern(row, endStart, END_PATTERN_REVERSED);
+      int[] endPattern;
+      try {
+        endPattern = findGuardPattern(row, endStart, END_PATTERN_REVERSED[0]);
+      } catch (NotFoundException nfe) {
+        endPattern = findGuardPattern(row, endStart, END_PATTERN_REVERSED[1]);
+      }
 
       // The start & end patterns must be pre/post fixed by a quiet zone. This
       // zone must be at least 10 times the width of a narrow line.
@@ -286,9 +313,6 @@ public final class ITFReader extends OneDReader {
   private static int[] findGuardPattern(BitArray row,
                                         int rowOffset,
                                         int[] pattern) throws NotFoundException {
-
-    // TODO: This is very similar to implementation in UPCEANReader. Consider if they can be
-    // merged to a single method.
     int patternLength = pattern.length;
     int[] counters = new int[patternLength];
     int width = row.getSize();
@@ -297,7 +321,7 @@ public final class ITFReader extends OneDReader {
     int counterPosition = 0;
     int patternStart = rowOffset;
     for (int x = rowOffset; x < width; x++) {
-      if (row.get(x) ^ isWhite) {
+      if (row.get(x) != isWhite) {
         counters[counterPosition]++;
       } else {
         if (counterPosition == patternLength - 1) {
@@ -305,9 +329,9 @@ public final class ITFReader extends OneDReader {
             return new int[]{patternStart, x};
           }
           patternStart += counters[0] + counters[1];
-          System.arraycopy(counters, 2, counters, 0, patternLength - 2);
-          counters[patternLength - 2] = 0;
-          counters[patternLength - 1] = 0;
+          System.arraycopy(counters, 2, counters, 0, counterPosition - 1);
+          counters[counterPosition - 1] = 0;
+          counters[counterPosition] = 0;
           counterPosition--;
         } else {
           counterPosition++;
@@ -328,20 +352,22 @@ public final class ITFReader extends OneDReader {
    * @throws NotFoundException if digit cannot be decoded
    */
   private static int decodeDigit(int[] counters) throws NotFoundException {
-
-    int bestVariance = MAX_AVG_VARIANCE; // worst variance we'll accept
+    float bestVariance = MAX_AVG_VARIANCE; // worst variance we'll accept
     int bestMatch = -1;
     int max = PATTERNS.length;
     for (int i = 0; i < max; i++) {
       int[] pattern = PATTERNS[i];
-      int variance = patternMatchVariance(counters, pattern, MAX_INDIVIDUAL_VARIANCE);
+      float variance = patternMatchVariance(counters, pattern, MAX_INDIVIDUAL_VARIANCE);
       if (variance < bestVariance) {
         bestVariance = variance;
         bestMatch = i;
+      } else if (variance == bestVariance) {
+        // if we find a second 'best match' with the same variance, we can not reliably report to have a suitable match
+        bestMatch = -1;
       }
     }
     if (bestMatch >= 0) {
-      return bestMatch;
+      return bestMatch % 10;
     } else {
       throw NotFoundException.getNotFoundInstance();
     }

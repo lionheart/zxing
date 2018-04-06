@@ -20,7 +20,7 @@ import com.google.zxing.common.BitMatrix;
 
 /**
  * Aztec 2D code representation
- * 
+ *
  * @author Rustam Abdullaev
  */
 public final class AztecCode {
@@ -32,7 +32,7 @@ public final class AztecCode {
   private BitMatrix matrix;
 
   /**
-   * Compact or full symbol indicator
+   * @return {@code true} if compact instead of full mode
    */
   public boolean isCompact() {
     return compact;
@@ -43,7 +43,7 @@ public final class AztecCode {
   }
 
   /**
-   * Size in pixels (width and height)
+   * @return size in pixels (width and height)
    */
   public int getSize() {
     return size;
@@ -52,20 +52,20 @@ public final class AztecCode {
   public void setSize(int size) {
     this.size = size;
   }
-  
+
   /**
-   * Number of levels
+   * @return number of levels
    */
   public int getLayers() {
     return layers;
   }
-  
+
   public void setLayers(int layers) {
     this.layers = layers;
   }
 
   /**
-   * Number of data codewords
+   * @return number of data codewords
    */
   public int getCodeWords() {
     return codeWords;
@@ -76,7 +76,7 @@ public final class AztecCode {
   }
 
   /**
-   * The symbol image
+   * @return the symbol image
    */
   public BitMatrix getMatrix() {
     return matrix;

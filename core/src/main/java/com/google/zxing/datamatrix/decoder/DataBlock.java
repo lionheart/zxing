@@ -82,20 +82,21 @@ final class DataBlock {
         result[j].codewords[i] = rawCodewords[rawCodewordsOffset++];
       }
     }
-    
+
     // Fill out the last data block in the longer ones
     boolean specialVersion = version.getVersionNumber() == 24;
     int numLongerBlocks = specialVersion ? 8 : numResultBlocks;
     for (int j = 0; j < numLongerBlocks; j++) {
       result[j].codewords[longerBlocksNumDataCodewords - 1] = rawCodewords[rawCodewordsOffset++];
     }
-    
+
     // Now add in error correction blocks
     int max = result[0].codewords.length;
     for (int i = longerBlocksNumDataCodewords; i < max; i++) {
       for (int j = 0; j < numResultBlocks; j++) {
-        int iOffset = specialVersion && j > 7 ? i - 1 : i;
-        result[j].codewords[iOffset] = rawCodewords[rawCodewordsOffset++];
+        int jOffset = specialVersion ? (j + 8) % numResultBlocks : j;
+        int iOffset = specialVersion && jOffset > 7 ? i - 1 : i;
+        result[jOffset].codewords[iOffset] = rawCodewords[rawCodewordsOffset++];
       }
     }
 

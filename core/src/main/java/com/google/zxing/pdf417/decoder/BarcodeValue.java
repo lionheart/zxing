@@ -28,7 +28,7 @@ import java.util.Map.Entry;
  * @author Guenther Grau
  */
 final class BarcodeValue {
-  private final Map<Integer,Integer> values = new HashMap<Integer,Integer>();
+  private final Map<Integer,Integer> values = new HashMap<>();
 
   /**
    * Add an occurrence of a value
@@ -43,12 +43,12 @@ final class BarcodeValue {
   }
 
   /**
-   * Determines the maximum occurrence of a set value and returns all values which were set with this occurrence. 
+   * Determines the maximum occurrence of a set value and returns all values which were set with this occurrence.
    * @return an array of int, containing the values with the highest occurrence, or null, if no value was set
    */
   int[] getValue() {
     int maxConfidence = -1;
-    Collection<Integer> result = new ArrayList<Integer>();
+    Collection<Integer> result = new ArrayList<>();
     for (Entry<Integer,Integer> entry : values.entrySet()) {
       if (entry.getValue() > maxConfidence) {
         maxConfidence = entry.getValue();
@@ -61,7 +61,7 @@ final class BarcodeValue {
     return PDF417Common.toIntArray(result);
   }
 
-  public Integer getConfidence(int value) {
+  Integer getConfidence(int value) {
     return values.get(value);
   }
 

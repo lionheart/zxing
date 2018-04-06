@@ -73,8 +73,7 @@ public final class MaxiCodeReader implements Reader {
       throw NotFoundException.getNotFoundInstance();
     }
 
-    ResultPoint[] points = NO_POINTS;
-    Result result = new Result(decoderResult.getText(), decoderResult.getRawBytes(), points, BarcodeFormat.MAXICODE);
+    Result result = new Result(decoderResult.getText(), decoderResult.getRawBytes(), NO_POINTS, BarcodeFormat.MAXICODE);
 
     String ecLevel = decoderResult.getECLevel();
     if (ecLevel != null) {
@@ -98,12 +97,12 @@ public final class MaxiCodeReader implements Reader {
    * @see com.google.zxing.qrcode.QRCodeReader#extractPureBits(BitMatrix)
    */
   private static BitMatrix extractPureBits(BitMatrix image) throws NotFoundException {
-    
+
     int[] enclosingRectangle = image.getEnclosingRectangle();
     if (enclosingRectangle == null) {
       throw NotFoundException.getNotFoundInstance();
     }
-    
+
     int left = enclosingRectangle[0];
     int top = enclosingRectangle[1];
     int width = enclosingRectangle[2];

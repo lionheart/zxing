@@ -21,7 +21,6 @@ import com.google.zxing.client.result.ParsedResult;
 import com.google.zxing.client.result.SMSParsedResult;
 
 import android.app.Activity;
-import android.telephony.PhoneNumberUtils;
 
 /**
  * Handles SMS addresses, offering a choice of composing a new SMS or MMS message.
@@ -51,13 +50,14 @@ public final class SMSResultHandler extends ResultHandler {
   @Override
   public void handleButtonPress(int index) {
     SMSParsedResult smsResult = (SMSParsedResult) getResult();
+    String number = smsResult.getNumbers()[0];
     switch (index) {
       case 0:
         // Don't know of a way yet to express a SENDTO intent with multiple recipients
-        sendSMS(smsResult.getNumbers()[0], smsResult.getBody());
+        sendSMS(number, smsResult.getBody());
         break;
       case 1:
-        sendMMS(smsResult.getNumbers()[0], smsResult.getSubject(), smsResult.getBody());
+        sendMMS(number, smsResult.getSubject(), smsResult.getBody());
         break;
     }
   }
@@ -68,7 +68,7 @@ public final class SMSResultHandler extends ResultHandler {
     String[] rawNumbers = smsResult.getNumbers();
     String[] formattedNumbers = new String[rawNumbers.length];
     for (int i = 0; i < rawNumbers.length; i++) {
-      formattedNumbers[i] = PhoneNumberUtils.formatNumber(rawNumbers[i]);
+      formattedNumbers[i] = formatPhone(rawNumbers[i]);
     }
     StringBuilder contents = new StringBuilder(50);
     ParsedResult.maybeAppend(formattedNumbers, contents);

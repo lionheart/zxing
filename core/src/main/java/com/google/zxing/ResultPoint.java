@@ -58,18 +58,14 @@ public class ResultPoint {
 
   @Override
   public final String toString() {
-    StringBuilder result = new StringBuilder(25);
-    result.append('(');
-    result.append(x);
-    result.append(',');
-    result.append(y);
-    result.append(')');
-    return result.toString();
+    return "(" + x + ',' + y + ')';
   }
 
   /**
-   * <p>Orders an array of three ResultPoints in an order [A,B,C] such that AB < AC and
-   * BC < AC and the angle between BC and BA is less than 180 degrees.
+   * Orders an array of three ResultPoints in an order [A,B,C] such that AB is less than AC
+   * and BC is less than AC, and the angle between BC and BA is less than 180 degrees.
+   *
+   * @param patterns array of three {@code ResultPoint} to order
    */
   public static void orderBestPatterns(ResultPoint[] patterns) {
 
@@ -111,8 +107,9 @@ public class ResultPoint {
     patterns[2] = pointC;
   }
 
-
   /**
+   * @param pattern1 first pattern
+   * @param pattern2 second pattern
    * @return distance between two points
    */
   public static float distance(ResultPoint pattern1, ResultPoint pattern2) {
@@ -129,6 +126,5 @@ public class ResultPoint {
     float bY = pointB.y;
     return ((pointC.x - bX) * (pointA.y - bY)) - ((pointC.y - bY) * (pointA.x - bX));
   }
-
 
 }

@@ -49,7 +49,7 @@ final class ExpandedPair {
     this.mayBeLast = mayBeLast;
   }
 
-  boolean mayBeLast(){
+  boolean mayBeLast() {
     return this.mayBeLast;
   }
 
@@ -68,14 +68,14 @@ final class ExpandedPair {
   public boolean mustBeLast() {
     return this.rightChar == null;
   }
-  
+
   @Override
   public String toString() {
     return
         "[ " + leftChar + " , " + rightChar + " : " +
         (finderPattern == null ? "null" : finderPattern.getValue()) + " ]";
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (!(o instanceof ExpandedPair)) {

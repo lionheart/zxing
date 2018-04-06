@@ -30,7 +30,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
-import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Random;
@@ -44,8 +44,8 @@ import java.util.regex.Pattern;
  */
 public final class EncoderTest extends Assert {
 
-  private static final Charset LATIN_1 = Charset.forName("ISO-8859-1");
   private static final Pattern DOTX = Pattern.compile("[^.X]");
+  private static final Pattern SPACES = Pattern.compile("\\s+");
   private static final ResultPoint[] NO_POINTS = new ResultPoint[0];
 
   // real life tests
@@ -125,23 +125,25 @@ public final class EncoderTest extends Assert {
           "      X     X     X     X X     X   X X   X X   X         X X       X       X   X \n" +
           "X       X           X   X   X     X X   X               X     X     X X X         \n");
   }
-  
+
   @Test
   public void testAztecWriter() throws Exception {
-    testWriter("\u20AC 1 sample data.", "ISO-8859-1", 25, true, 2);
-    testWriter("\u20AC 1 sample data.", "ISO-8859-15", 25, true, 2);
-    testWriter("\u20AC 1 sample data.", "UTF-8",  25, true, 2);
-    testWriter("\u20AC 1 sample data.", "UTF-8", 100, true, 3);
-    testWriter("\u20AC 1 sample data.", "UTF-8", 300, true, 4);
-    testWriter("\u20AC 1 sample data.", "UTF-8", 500, false, 5);
-    // Test AztecWriter defaults
-    String data = "In ut magna vel mauris malesuada";
-    AztecWriter writer = new AztecWriter();
-    BitMatrix matrix = writer.encode(data, BarcodeFormat.AZTEC, 0, 0);
-    AztecCode aztec = Encoder.encode(data.getBytes(LATIN_1),
-        Encoder.DEFAULT_EC_PERCENT, Encoder.DEFAULT_AZTEC_LAYERS);
-    BitMatrix expectedMatrix = aztec.getMatrix();
-    assertEquals(matrix, expectedMatrix);
+    for (int i = 0; i < 1000; i++) {
+      testWriter("\u20AC 1 sample data.", "ISO-8859-1", 25, true, 2);
+      testWriter("\u20AC 1 sample data.", "ISO-8859-15", 25, true, 2);
+      testWriter("\u20AC 1 sample data.", "UTF-8", 25, true, 2);
+      testWriter("\u20AC 1 sample data.", "UTF-8", 100, true, 3);
+      testWriter("\u20AC 1 sample data.", "UTF-8", 300, true, 4);
+      testWriter("\u20AC 1 sample data.", "UTF-8", 500, false, 5);
+      // Test AztecWriter defaults
+      String data = "In ut magna vel mauris malesuada";
+      AztecWriter writer = new AztecWriter();
+      BitMatrix matrix = writer.encode(data, BarcodeFormat.AZTEC, 0, 0);
+      AztecCode aztec = Encoder.encode(data.getBytes(StandardCharsets.ISO_8859_1),
+          Encoder.DEFAULT_EC_PERCENT, Encoder.DEFAULT_AZTEC_LAYERS);
+      BitMatrix expectedMatrix = aztec.getMatrix();
+      assertEquals(matrix, expectedMatrix);
+    }
   }
   
   // synthetic tests (encode-decode round-trip)
@@ -211,42 +213,42 @@ public final class EncoderTest extends Assert {
   @Test
   public void testEncodeDecode31() throws Exception {
     testEncodeDecode("In ut magna vel mauris malesuada dictum. Nulla ullamcorper metus quis diam" +
-  		" cursus facilisis. Sed mollis quam id justo rutrum sagittis. Donec laoreet rutrum" +
-  		" est, nec convallis mauris condimentum sit amet. Phasellus gravida, justo et congue" +
-  		" auctor, nisi ipsum viverra erat, eget hendrerit felis turpis nec lorem. Nulla" +
-  		" ultrices, elit pellentesque aliquet laoreet, justo erat pulvinar nisi, id" +
-  		" elementum sapien dolor et diam. Donec ac nunc sodales elit placerat eleifend." +
-  		" Sed ornare luctus ornare. Vestibulum vehicula, massa at pharetra fringilla, risus" +
-  		" justo faucibus erat, nec porttitor nibh tellus sed est. Ut justo diam, lobortis eu" +
-  		" tristique ac, p.In ut magna vel mauris malesuada dictum. Nulla ullamcorper metus" +
-  		" quis diam cursus facilisis. Sed mollis quam id justo rutrum sagittis. Donec" +
-  		" laoreet rutrum est, nec convallis mauris condimentum sit amet. Phasellus gravida," +
-  		" justo et congue auctor, nisi ipsum viverra erat, eget hendrerit felis turpis nec" +
-  		" lorem. Nulla ultrices, elit pellentesque aliquet laoreet, justo erat pulvinar" +
-  		" nisi, id elementum sapien dolor et diam. Donec ac nunc sodales elit placerat" +
-  		" eleifend. Sed ornare luctus ornare. Vestibulum vehicula, massa at pharetra" +
-  		" fringilla, risus justo faucibus erat, nec porttitor nibh tellus sed est. Ut justo" +
-  		" diam, lobortis eu tristique ac, p. In ut magna vel mauris malesuada dictum. Nulla" +
-  		" ullamcorper metus quis diam cursus facilisis. Sed mollis quam id justo rutrum" +
-  		" sagittis. Donec laoreet rutrum est, nec convallis mauris condimentum sit amet." +
-  		" Phasellus gravida, justo et congue auctor, nisi ipsum viverra erat, eget hendrerit" +
-  		" felis turpis nec lorem. Nulla ultrices, elit pellentesque aliquet laoreet, justo" +
-  		" erat pulvinar nisi, id elementum sapien dolor et diam. Donec ac nunc sodales elit" +
-  		" placerat eleifend. Sed ornare luctus ornare. Vestibulum vehicula, massa at" +
-  		" pharetra fringilla, risus justo faucibus erat, nec porttitor nibh tellus sed est." +
-  		" Ut justo diam, lobortis eu tristique ac, p.In ut magna vel mauris malesuada" +
-  		" dictum. Nulla ullamcorper metus quis diam cursus facilisis. Sed mollis quam id" +
-  		" justo rutrum sagittis. Donec laoreet rutrum est, nec convallis mauris condimentum" +
-  		" sit amet. Phasellus gravida, justo et congue auctor, nisi ipsum viverra erat," +
-  		" eget hendrerit felis turpis nec lorem. Nulla ultrices, elit pellentesque aliquet" +
-  		" laoreet, justo erat pulvinar nisi, id elementum sapien dolor et diam. Donec ac" +
-  		" nunc sodales elit placerat eleifend. Sed ornare luctus ornare. Vestibulum vehicula," +
-  		" massa at pharetra fringilla, risus justo faucibus erat, nec porttitor nibh tellus" +
-  		" sed est. Ut justo diam, lobortis eu tris. In ut magna vel mauris malesuada dictum." +
-  		" Nulla ullamcorper metus quis diam cursus facilisis. Sed mollis quam id justo rutrum" +
-  		" sagittis. Donec laoreet rutrum est, nec convallis mauris condimentum sit amet." +
-  		" Phasellus gravida, justo et congue auctor, nisi ipsum viverra erat, eget" +
-  		" hendrerit felis turpis nec lorem.", false, 31);
+      " cursus facilisis. Sed mollis quam id justo rutrum sagittis. Donec laoreet rutrum" +
+      " est, nec convallis mauris condimentum sit amet. Phasellus gravida, justo et congue" +
+      " auctor, nisi ipsum viverra erat, eget hendrerit felis turpis nec lorem. Nulla" +
+      " ultrices, elit pellentesque aliquet laoreet, justo erat pulvinar nisi, id" +
+      " elementum sapien dolor et diam. Donec ac nunc sodales elit placerat eleifend." +
+      " Sed ornare luctus ornare. Vestibulum vehicula, massa at pharetra fringilla, risus" +
+      " justo faucibus erat, nec porttitor nibh tellus sed est. Ut justo diam, lobortis eu" +
+      " tristique ac, p.In ut magna vel mauris malesuada dictum. Nulla ullamcorper metus" +
+      " quis diam cursus facilisis. Sed mollis quam id justo rutrum sagittis. Donec" +
+      " laoreet rutrum est, nec convallis mauris condimentum sit amet. Phasellus gravida," +
+      " justo et congue auctor, nisi ipsum viverra erat, eget hendrerit felis turpis nec" +
+      " lorem. Nulla ultrices, elit pellentesque aliquet laoreet, justo erat pulvinar" +
+      " nisi, id elementum sapien dolor et diam. Donec ac nunc sodales elit placerat" +
+      " eleifend. Sed ornare luctus ornare. Vestibulum vehicula, massa at pharetra" +
+      " fringilla, risus justo faucibus erat, nec porttitor nibh tellus sed est. Ut justo" +
+      " diam, lobortis eu tristique ac, p. In ut magna vel mauris malesuada dictum. Nulla" +
+      " ullamcorper metus quis diam cursus facilisis. Sed mollis quam id justo rutrum" +
+      " sagittis. Donec laoreet rutrum est, nec convallis mauris condimentum sit amet." +
+      " Phasellus gravida, justo et congue auctor, nisi ipsum viverra erat, eget hendrerit" +
+      " felis turpis nec lorem. Nulla ultrices, elit pellentesque aliquet laoreet, justo" +
+      " erat pulvinar nisi, id elementum sapien dolor et diam. Donec ac nunc sodales elit" +
+      " placerat eleifend. Sed ornare luctus ornare. Vestibulum vehicula, massa at" +
+      " pharetra fringilla, risus justo faucibus erat, nec porttitor nibh tellus sed est." +
+      " Ut justo diam, lobortis eu tristique ac, p.In ut magna vel mauris malesuada" +
+      " dictum. Nulla ullamcorper metus quis diam cursus facilisis. Sed mollis quam id" +
+      " justo rutrum sagittis. Donec laoreet rutrum est, nec convallis mauris condimentum" +
+      " sit amet. Phasellus gravida, justo et congue auctor, nisi ipsum viverra erat," +
+      " eget hendrerit felis turpis nec lorem. Nulla ultrices, elit pellentesque aliquet" +
+      " laoreet, justo erat pulvinar nisi, id elementum sapien dolor et diam. Donec ac" +
+      " nunc sodales elit placerat eleifend. Sed ornare luctus ornare. Vestibulum vehicula," +
+      " massa at pharetra fringilla, risus justo faucibus erat, nec porttitor nibh tellus" +
+      " sed est. Ut justo diam, lobortis eu tris. In ut magna vel mauris malesuada dictum." +
+      " Nulla ullamcorper metus quis diam cursus facilisis. Sed mollis quam id justo rutrum" +
+      " sagittis. Donec laoreet rutrum est, nec convallis mauris condimentum sit amet." +
+      " Phasellus gravida, justo et congue auctor, nisi ipsum viverra erat, eget" +
+      " hendrerit felis turpis nec lorem.", false, 31);
   }
 
   @Test
@@ -386,7 +388,7 @@ public final class EncoderTest extends Assert {
 
   @Test
   public void testUserSpecifiedLayers() throws Exception {
-    byte[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(LATIN_1);
+    byte[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(StandardCharsets.ISO_8859_1);
     AztecCode aztec = Encoder.encode(alphabet, 25, -2);
     assertEquals(2, aztec.getLayers());
     assertTrue(aztec.isCompact());
@@ -398,12 +400,16 @@ public final class EncoderTest extends Assert {
     try {
       Encoder.encode(alphabet, 25, 33);
       fail("Encode should have failed.  No such thing as 33 layers");
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+      // continue
+    }
 
     try {
       Encoder.encode(alphabet, 25, -1);
       fail("Encode should have failed.  Text can't fit in 1-layer compact");
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+      // continue
+    }
   }
 
   @Test
@@ -413,11 +419,13 @@ public final class EncoderTest extends Assert {
     String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     // encodes as 26 * 5 * 4 = 520 bits of data
     String alphabet4 = alphabet + alphabet + alphabet + alphabet;
-    byte[] data = alphabet4.getBytes(LATIN_1);
+    byte[] data = alphabet4.getBytes(StandardCharsets.ISO_8859_1);
     try {
       Encoder.encode(data, 0, -4);
       fail("Encode should have failed.  Text can't fit in 1-layer compact");
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+      // continue
+    }
 
     // If we just try to encode it normally, it will go to a non-compact 4 layer
     AztecCode aztecCode = Encoder.encode(data, 0, Encoder.DEFAULT_AZTEC_LAYERS);
@@ -426,7 +434,7 @@ public final class EncoderTest extends Assert {
 
     // But shortening the string to 100 bytes (500 bits of data), compact works fine, even if we
     // include more error checking.
-    aztecCode = Encoder.encode(alphabet4.substring(0, 100).getBytes(LATIN_1), 10, Encoder.DEFAULT_AZTEC_LAYERS);
+    aztecCode = Encoder.encode(alphabet4.substring(0, 100).getBytes(StandardCharsets.ISO_8859_1), 10, Encoder.DEFAULT_AZTEC_LAYERS);
     assertTrue(aztecCode.isCompact());
     assertEquals(4, aztecCode.getLayers());
   }
@@ -434,7 +442,7 @@ public final class EncoderTest extends Assert {
   // Helper routines
 
   private static void testEncode(String data, boolean compact, int layers, String expected) throws Exception {
-    AztecCode aztec = Encoder.encode(data.getBytes(LATIN_1), 33, Encoder.DEFAULT_AZTEC_LAYERS);
+    AztecCode aztec = Encoder.encode(data.getBytes(StandardCharsets.ISO_8859_1), 33, Encoder.DEFAULT_AZTEC_LAYERS);
     assertEquals("Unexpected symbol format (compact)", compact, aztec.isCompact());
     assertEquals("Unexpected nr. of layers", layers, aztec.getLayers());
     BitMatrix matrix = aztec.getMatrix();
@@ -442,7 +450,7 @@ public final class EncoderTest extends Assert {
   }
 
   private static void testEncodeDecode(String data, boolean compact, int layers) throws Exception {
-    AztecCode aztec = Encoder.encode(data.getBytes(LATIN_1), 25, Encoder.DEFAULT_AZTEC_LAYERS);
+    AztecCode aztec = Encoder.encode(data.getBytes(StandardCharsets.ISO_8859_1), 25, Encoder.DEFAULT_AZTEC_LAYERS);
     assertEquals("Unexpected symbol format (compact)", compact, aztec.isCompact());
     assertEquals("Unexpected nr. of layers", layers, aztec.getLayers());
     BitMatrix matrix = aztec.getMatrix();
@@ -468,8 +476,8 @@ public final class EncoderTest extends Assert {
                                  int layers) throws FormatException {
     // 1. Perform an encode-decode round-trip because it can be lossy.
     // 2. Aztec Decoder currently always decodes the data with a LATIN-1 charset:
-    String expectedData = new String(data.getBytes(Charset.forName(charset)), LATIN_1);
-    Map<EncodeHintType,Object> hints = new EnumMap<EncodeHintType,Object>(EncodeHintType.class);
+    String expectedData = new String(data.getBytes(Charset.forName(charset)), StandardCharsets.ISO_8859_1);
+    Map<EncodeHintType,Object> hints = new EnumMap<>(EncodeHintType.class);
     hints.put(EncodeHintType.CHARACTER_SET, charset);
     hints.put(EncodeHintType.ERROR_CORRECTION, eccPercent);
     AztecWriter writer = new AztecWriter();
@@ -484,8 +492,8 @@ public final class EncoderTest extends Assert {
         new AztecDetectorResult(matrix, NO_POINTS, aztec.isCompact(), aztec.getCodeWords(), aztec.getLayers());
     DecoderResult res = new Decoder().decode(r);
     assertEquals(expectedData, res.getText());
-    // Check error correction by introducing up to eccPercent errors
-    int ecWords = aztec.getCodeWords() * eccPercent / 100;
+    // Check error correction by introducing up to eccPercent/2 errors
+    int ecWords = aztec.getCodeWords() * eccPercent / 100 / 2;
     Random random = getPseudoRandom();
     for (int i = 0; i < ecWords; i++) {
       // don't touch the core
@@ -503,20 +511,19 @@ public final class EncoderTest extends Assert {
   }
 
   private static Random getPseudoRandom() {
-    return new SecureRandom(new byte[] {(byte) 0xDE, (byte) 0xAD, (byte) 0xBE, (byte) 0xEF});
+    return new Random(0xDEADBEEF);
   }
 
   private static void testModeMessage(boolean compact, int layers, int words, String expected) {
     BitArray in = Encoder.generateModeMessage(compact, layers, words);
-    assertEquals("generateModeMessage() failed", expected.replace(" ", ""), in.toString().replace(" ", ""));
+    assertEquals("generateModeMessage() failed", stripSpace(expected), stripSpace(in.toString()));
   }
 
   private static void testStuffBits(int wordSize, String bits, String expected) {
     BitArray in = toBitArray(bits);
     BitArray stuffed = Encoder.stuffBits(in, wordSize);
     assertEquals("stuffBits() failed for input string: " + bits, 
-                 expected.replace(" ", ""), 
-                 stuffed.toString().replace(" ", ""));
+                 stripSpace(expected), stripSpace(stuffed.toString()));
   }
 
   private static BitArray toBitArray(CharSequence bits) {
@@ -537,17 +544,22 @@ public final class EncoderTest extends Assert {
   }
 
   private static void testHighLevelEncodeString(String s, String expectedBits) {
-    BitArray bits = new HighLevelEncoder(s.getBytes(LATIN_1)).encode();
-    String receivedBits = bits.toString().replace(" ", "");
-    assertEquals("highLevelEncode() failed for input string: " + s, expectedBits.replace(" ", ""), receivedBits);
+    BitArray bits = new HighLevelEncoder(s.getBytes(StandardCharsets.ISO_8859_1)).encode();
+    String receivedBits = stripSpace(bits.toString());
+    assertEquals("highLevelEncode() failed for input string: " + s, stripSpace(expectedBits), receivedBits);
     assertEquals(s, Decoder.highLevelDecode(toBooleanArray(bits)));
   }
 
   private static void testHighLevelEncodeString(String s, int expectedReceivedBits) {
-    BitArray bits = new HighLevelEncoder(s.getBytes(LATIN_1)).encode();
-    int receivedBitCount = bits.toString().replace(" ", "").length();
+    BitArray bits = new HighLevelEncoder(s.getBytes(StandardCharsets.ISO_8859_1)).encode();
+    int receivedBitCount = stripSpace(bits.toString()).length();
     assertEquals("highLevelEncode() failed for input string: " + s, 
                  expectedReceivedBits, receivedBitCount);
     assertEquals(s, Decoder.highLevelDecode(toBooleanArray(bits)));
   }
+
+  private static String stripSpace(String s) {
+    return SPACES.matcher(s).replaceAll("");
+  }
+
 }

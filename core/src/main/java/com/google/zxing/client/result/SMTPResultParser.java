@@ -22,8 +22,6 @@ import com.google.zxing.Result;
  * <p>Parses an "smtp:" URI result, whose format is not standardized but appears to be like:
  * {@code smtp[:subject[:body]]}.</p>
  *
- * <p>See http://code.google.com/p/zxing/issues/detail?id=536</p>
- *
  * @author Sean Owen
  */
 public final class SMTPResultParser extends ResultParser {
@@ -47,7 +45,10 @@ public final class SMTPResultParser extends ResultParser {
         subject = subject.substring(0, colon);
       }
     }
-    String mailtoURI = "mailto:" + emailAddress;
-    return new EmailAddressParsedResult(emailAddress, subject, body, mailtoURI);
+    return new EmailAddressParsedResult(new String[] {emailAddress},
+                                        null,
+                                        null,
+                                        subject,
+                                        body);
   }
 }

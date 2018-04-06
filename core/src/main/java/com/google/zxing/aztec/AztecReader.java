@@ -75,16 +75,7 @@ public final class AztecReader implements Reader {
         AztecDetectorResult detectorResult = detector.detect(true);
         points = detectorResult.getPoints();
         decoderResult = new Decoder().decode(detectorResult);
-      } catch (NotFoundException e) {
-        if (notFoundException != null) {
-          throw notFoundException;
-        }
-        if (formatException != null) {
-          throw formatException;
-        }
-        throw e;
-      } catch (FormatException e) {
-        // throw the exception from the non-mirror case, instead
+      } catch (NotFoundException | FormatException e) {
         if (notFoundException != null) {
           throw notFoundException;
         }
@@ -104,8 +95,13 @@ public final class AztecReader implements Reader {
       }
     }
 
-    Result result = new Result(decoderResult.getText(), decoderResult.getRawBytes(), points, BarcodeFormat.AZTEC);
-    
+    Result result = new Result(decoderResult.getText(),
+                               decoderResult.getRawBytes(),
+                               decoderResult.getNumBits(),
+                               points,
+                               BarcodeFormat.AZTEC,
+                               System.currentTimeMillis());
+
     List<byte[]> byteSegments = decoderResult.getByteSegments();
     if (byteSegments != null) {
       result.putMetadata(ResultMetadataType.BYTE_SEGMENTS, byteSegments);
@@ -114,7 +110,7 @@ public final class AztecReader implements Reader {
     if (ecLevel != null) {
       result.putMetadata(ResultMetadataType.ERROR_CORRECTION_LEVEL, ecLevel);
     }
-    
+
     return result;
   }
 

@@ -18,6 +18,7 @@ package com.google.zxing.pdf417.decoder.ec;
 
 import com.google.zxing.ChecksumException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Random;
@@ -26,12 +27,6 @@ import java.util.Random;
  * @author Sean Owen
  */
 public final class ErrorCorrectionTestCase extends AbstractErrorCorrectionTestCase {
-
-  /** See ISO 15438, Annex Q */
-  //private static final int[] PDF417_TEST =
-  //    { 5, 453, 178, 121, 239 };
-  //private static final int[] PDF417_TEST_WITH_EC =
-  //    { 5, 453, 178, 121, 239, 452, 327, 657, 619 };
 
   private static final int[] PDF417_TEST = {
       48, 901, 56, 141, 627, 856, 330, 69, 244, 900, 852, 169, 843, 895, 852, 895, 913, 154, 845, 778, 387, 89, 869,
@@ -44,12 +39,9 @@ public final class ErrorCorrectionTestCase extends AbstractErrorCorrectionTestCa
       806, 908, 309, 153, 871, 686, 838, 185, 674, 68, 679, 691, 794, 497, 479, 234, 250, 496, 43, 347, 582, 882, 536,
       322, 317, 273, 194, 917, 237, 420, 859, 340, 115, 222, 808, 866, 836, 417, 121, 833, 459, 64, 159};
   private static final int ECC_BYTES = PDF417_TEST_WITH_EC.length - PDF417_TEST.length;
-  // Example is EC level 1 (s=1). The number of erasures (l) and substitutions (f) must obey:
-  // l + 2f <= 2^(s+1) - 3
-  private static final int EC_LEVEL = 5;
-  private static final int ERROR_LIMIT = (1 << (EC_LEVEL + 1)) - 3;
+  private static final int ERROR_LIMIT = ECC_BYTES;
   private static final int MAX_ERRORS = ERROR_LIMIT / 2;
-  //private static final int MAX_ERASURES = ERROR_LIMIT;
+  private static final int MAX_ERASURES = ERROR_LIMIT;
 
   private final ErrorCorrection ec = new ErrorCorrection();
 
@@ -84,7 +76,7 @@ public final class ErrorCorrectionTestCase extends AbstractErrorCorrectionTestCa
   public void testTooManyErrors() {
     int[] received = PDF417_TEST_WITH_EC.clone();
     Random random = getRandom();
-    corrupt(received, MAX_ERRORS + 3, random); // +3 since the algo can actually correct 2 more than it should here
+    corrupt(received, MAX_ERRORS + 1, random);
     try {
       checkDecode(received);
       fail("Should not have decoded");
@@ -93,7 +85,7 @@ public final class ErrorCorrectionTestCase extends AbstractErrorCorrectionTestCa
     }
   }
 
-  /*
+  @Ignore("Erasures not implemented yet")
   @Test
   public void testMaxErasures() throws ChecksumException {
     Random random = getRandom();
@@ -104,6 +96,7 @@ public final class ErrorCorrectionTestCase extends AbstractErrorCorrectionTestCa
     }
   }
 
+  @Ignore("Erasures not implemented yet")
   @Test
   public void testTooManyErasures() {
     Random random = getRandom();
@@ -116,7 +109,6 @@ public final class ErrorCorrectionTestCase extends AbstractErrorCorrectionTestCa
       // good
     }
   }
-   */
 
   private void checkDecode(int[] received) throws ChecksumException {
     checkDecode(received, new int[0]);

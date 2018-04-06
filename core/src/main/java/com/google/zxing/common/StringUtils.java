@@ -16,6 +16,7 @@
 
 package com.google.zxing.common;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import com.google.zxing.DecodeHintType;
@@ -28,8 +29,7 @@ import com.google.zxing.DecodeHintType;
  */
 public final class StringUtils {
 
-  private static final String PLATFORM_DEFAULT_ENCODING =
-      System.getProperty("file.encoding");
+  private static final String PLATFORM_DEFAULT_ENCODING = Charset.defaultCharset().name();
   public static final String SHIFT_JIS = "SJIS";
   public static final String GB2312 = "GB2312";
   private static final String EUC_JP = "EUC_JP";
@@ -39,7 +39,7 @@ public final class StringUtils {
       SHIFT_JIS.equalsIgnoreCase(PLATFORM_DEFAULT_ENCODING) ||
       EUC_JP.equalsIgnoreCase(PLATFORM_DEFAULT_ENCODING);
 
-  private StringUtils() {}
+  private StringUtils() { }
 
   /**
    * @param bytes bytes encoding a string, whose encoding should be guessed
@@ -49,11 +49,8 @@ public final class StringUtils {
    *  default encoding if none of these can possibly be correct
    */
   public static String guessEncoding(byte[] bytes, Map<DecodeHintType,?> hints) {
-    if (hints != null) {
-      String characterSet = (String) hints.get(DecodeHintType.CHARACTER_SET);
-      if (characterSet != null) {
-        return characterSet;
-      }
+    if (hints != null && hints.containsKey(DecodeHintType.CHARACTER_SET)) {
+      return hints.get(DecodeHintType.CHARACTER_SET).toString();
     }
     // For now, merely tries to distinguish ISO-8859-1, UTF-8 and Shift_JIS,
     // which should be by far the most common encodings.
@@ -62,20 +59,15 @@ public final class StringUtils {
     boolean canBeShiftJIS = true;
     boolean canBeUTF8 = true;
     int utf8BytesLeft = 0;
-    //int utf8LowChars = 0;
     int utf2BytesChars = 0;
     int utf3BytesChars = 0;
     int utf4BytesChars = 0;
     int sjisBytesLeft = 0;
-    //int sjisLowChars = 0;
     int sjisKatakanaChars = 0;
-    //int sjisDoubleBytesChars = 0;
     int sjisCurKatakanaWordLength = 0;
     int sjisCurDoubleBytesWordLength = 0;
     int sjisMaxKatakanaWordLength = 0;
     int sjisMaxDoubleBytesWordLength = 0;
-    //int isoLowChars = 0;
-    //int isoHighChars = 0;
     int isoHighOther = 0;
 
     boolean utf8bom = bytes.length > 3 &&
@@ -118,24 +110,16 @@ public final class StringUtils {
               }
             }
           }
-        } //else {
-          //utf8LowChars++;
-        //}
+        }
       }
 
       // ISO-8859-1 stuff
       if (canBeISO88591) {
         if (value > 0x7F && value < 0xA0) {
           canBeISO88591 = false;
-        } else if (value > 0x9F) {
-          if (value < 0xC0 || value == 0xD7 || value == 0xF7) {
-            isoHighOther++;
-          } //else {
-            //isoHighChars++;
-          //}
-        } //else {
-          //isoLowChars++;
-        //}
+        } else if (value > 0x9F && (value < 0xC0 || value == 0xD7 || value == 0xF7)) {
+          isoHighOther++;
+        }
       }
 
       // Shift_JIS stuff

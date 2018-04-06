@@ -27,13 +27,14 @@
 package com.google.zxing.oned.rss.expanded;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import javax.imageio.ImageIO;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.BufferedImageLuminanceSource;
+import com.google.zxing.common.AbstractBlackBoxTestCase;
 import com.google.zxing.common.GlobalHistogramBinarizer;
 
 final class TestCaseUtil {
@@ -42,18 +43,14 @@ final class TestCaseUtil {
   }
 
   private static BufferedImage getBufferedImage(String path) throws IOException {
-    File file = new File(path);
-    if (!file.exists()) {
-      // Support running from project root too
-      file = new File("core", path);
-    }
-    return ImageIO.read(file);
-	}
-	
+    Path file = AbstractBlackBoxTestCase.buildTestBase(path);
+    return ImageIO.read(file.toFile());
+  }
+
   static BinaryBitmap getBinaryBitmap(String path) throws IOException {
-		BufferedImage bufferedImage = getBufferedImage(path);
-		BufferedImageLuminanceSource luminanceSource = new BufferedImageLuminanceSource(bufferedImage);
-		return new BinaryBitmap(new GlobalHistogramBinarizer(luminanceSource));
-	}
+    BufferedImage bufferedImage = getBufferedImage(path);
+    BufferedImageLuminanceSource luminanceSource = new BufferedImageLuminanceSource(bufferedImage);
+    return new BinaryBitmap(new GlobalHistogramBinarizer(luminanceSource));
+  }
 
 }

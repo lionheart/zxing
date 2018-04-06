@@ -93,6 +93,12 @@ public class QRCodeReader implements Reader {
     if (ecLevel != null) {
       result.putMetadata(ResultMetadataType.ERROR_CORRECTION_LEVEL, ecLevel);
     }
+    if (decoderResult.hasStructuredAppend()) {
+      result.putMetadata(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE,
+                         decoderResult.getStructuredAppendSequenceNumber());
+      result.putMetadata(ResultMetadataType.STRUCTURED_APPEND_PARITY,
+                         decoderResult.getStructuredAppendParity());
+    }
     return result;
   }
 
@@ -123,7 +129,7 @@ public class QRCodeReader implements Reader {
     int bottom = rightBottomBlack[1];
     int left = leftTopBlack[0];
     int right = rightBottomBlack[0];
-    
+
     // Sanity check!
     if (left >= right || top >= bottom) {
       throw NotFoundException.getNotFoundInstance();
@@ -133,6 +139,10 @@ public class QRCodeReader implements Reader {
       // Special case, where bottom-right module wasn't black so we found something else in the last row
       // Assume it's a square, so use height as the width
       right = left + (bottom - top);
+      if (right >= image.getWidth()) {
+        // Abort if that would not make sense -- off image
+        throw NotFoundException.getNotFoundInstance();
+      }
     }
 
     int matrixWidth = Math.round((right - left + 1) / moduleSize);
@@ -151,9 +161,11 @@ public class QRCodeReader implements Reader {
     int nudge = (int) (moduleSize / 2.0f);
     top += nudge;
     left += nudge;
-    
+
     // But careful that this does not sample off the edge
-    int nudgedTooFarRight = left + (int) ((matrixWidth - 1) * moduleSize) - (right - 1);
+    // "right" is the farthest-right valid pixel location -- right+1 is not necessarily
+    // This is positive by how much the inner x loop below would be too large
+    int nudgedTooFarRight = left + (int) ((matrixWidth - 1) * moduleSize) - right;
     if (nudgedTooFarRight > 0) {
       if (nudgedTooFarRight > nudge) {
         // Neither way fits; abort
@@ -161,7 +173,8 @@ public class QRCodeReader implements Reader {
       }
       left -= nudgedTooFarRight;
     }
-    int nudgedTooFarDown = top + (int) ((matrixHeight - 1) * moduleSize) - (bottom - 1);
+    // See logic above
+    int nudgedTooFarDown = top + (int) ((matrixHeight - 1) * moduleSize) - bottom;
     if (nudgedTooFarDown > 0) {
       if (nudgedTooFarDown > nudge) {
         // Neither way fits; abort

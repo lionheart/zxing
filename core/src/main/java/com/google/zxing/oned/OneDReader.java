@@ -41,9 +41,6 @@ import java.util.Map;
  */
 public abstract class OneDReader implements Reader {
 
-  protected static final int INTEGER_MATH_SHIFT = 8;
-  protected static final int PATTERN_MATCH_RESULT_SCALE_FACTOR = 1 << INTEGER_MATH_SHIFT;
-
   @Override
   public Result decode(BinaryBitmap image) throws NotFoundException, FormatException {
     return decode(image, null);
@@ -109,7 +106,6 @@ public abstract class OneDReader implements Reader {
     int height = image.getHeight();
     BitArray row = new BitArray(width);
 
-    int middle = height >> 1;
     boolean tryHarder = hints != null && hints.containsKey(DecodeHintType.TRY_HARDER);
     int rowStep = Math.max(1, height >> (tryHarder ? 8 : 5));
     int maxLines;
@@ -119,10 +115,11 @@ public abstract class OneDReader implements Reader {
       maxLines = 15; // 15 rows spaced 1/32 apart is roughly the middle half of the image
     }
 
+    int middle = height / 2;
     for (int x = 0; x < maxLines; x++) {
 
       // Scanning from the middle out. Determine which row we're looking at next:
-      int rowStepsAboveOrBelow = (x + 1) >> 1;
+      int rowStepsAboveOrBelow = (x + 1) / 2;
       boolean isAbove = (x & 0x01) == 0; // i.e. is x even?
       int rowNumber = middle + rowStep * (isAbove ? rowStepsAboveOrBelow : -rowStepsAboveOrBelow);
       if (rowNumber < 0 || rowNumber >= height) {
@@ -147,7 +144,7 @@ public abstract class OneDReader implements Reader {
           // don't want to clutter with noise from every single row scan -- just the scans
           // that start on the center line.
           if (hints != null && hints.containsKey(DecodeHintType.NEED_RESULT_POINT_CALLBACK)) {
-            Map<DecodeHintType,Object> newHints = new EnumMap<DecodeHintType,Object>(DecodeHintType.class);
+            Map<DecodeHintType,Object> newHints = new EnumMap<>(DecodeHintType.class);
             newHints.putAll(hints);
             newHints.remove(DecodeHintType.NEED_RESULT_POINT_CALLBACK);
             hints = newHints;
@@ -203,11 +200,10 @@ public abstract class OneDReader implements Reader {
     int counterPosition = 0;
     int i = start;
     while (i < end) {
-      if (row.get(i) ^ isWhite) { // that is, exactly one is true
+      if (row.get(i) != isWhite) {
         counters[counterPosition]++;
       } else {
-        counterPosition++;
-        if (counterPosition == numCounters) {
+        if (++counterPosition == numCounters) {
           break;
         } else {
           counters[counterPosition] = 1;
@@ -248,14 +244,11 @@ public abstract class OneDReader implements Reader {
    * @param counters observed counters
    * @param pattern expected pattern
    * @param maxIndividualVariance The most any counter can differ before we give up
-   * @return ratio of total variance between counters and pattern compared to total pattern size,
-   *  where the ratio has been multiplied by 256. So, 0 means no variance (perfect match); 256 means
-   *  the total variance between counters and patterns equals the pattern length, higher values mean
-   *  even more variance
+   * @return ratio of total variance between counters and pattern compared to total pattern size
    */
-  protected static int patternMatchVariance(int[] counters,
-                                            int[] pattern,
-                                            int maxIndividualVariance) {
+  protected static float patternMatchVariance(int[] counters,
+                                              int[] pattern,
+                                              float maxIndividualVariance) {
     int numCounters = counters.length;
     int total = 0;
     int patternLength = 0;
@@ -266,21 +259,19 @@ public abstract class OneDReader implements Reader {
     if (total < patternLength) {
       // If we don't even have one pixel per unit of bar width, assume this is too small
       // to reliably match, so fail:
-      return Integer.MAX_VALUE;
+      return Float.POSITIVE_INFINITY;
     }
-    // We're going to fake floating-point math in integers. We just need to use more bits.
-    // Scale up patternLength so that intermediate values below like scaledCounter will have
-    // more "significant digits"
-    int unitBarWidth = (total << INTEGER_MATH_SHIFT) / patternLength;
-    maxIndividualVariance = (maxIndividualVariance * unitBarWidth) >> INTEGER_MATH_SHIFT;
 
-    int totalVariance = 0;
+    float unitBarWidth = (float) total / patternLength;
+    maxIndividualVariance *= unitBarWidth;
+
+    float totalVariance = 0.0f;
     for (int x = 0; x < numCounters; x++) {
-      int counter = counters[x] << INTEGER_MATH_SHIFT;
-      int scaledPattern = pattern[x] * unitBarWidth;
-      int variance = counter > scaledPattern ? counter - scaledPattern : scaledPattern - counter;
+      int counter = counters[x];
+      float scaledPattern = pattern[x] * unitBarWidth;
+      float variance = counter > scaledPattern ? counter - scaledPattern : scaledPattern - counter;
       if (variance > maxIndividualVariance) {
-        return Integer.MAX_VALUE;
+        return Float.POSITIVE_INFINITY;
       }
       totalVariance += variance;
     }
@@ -295,7 +286,9 @@ public abstract class OneDReader implements Reader {
    * @param row the black/white pixel data of the row
    * @param hints decode hints
    * @return {@link Result} containing encoded string and start/end of barcode
-   * @throws NotFoundException if an error occurs or barcode cannot be found
+   * @throws NotFoundException if no potential barcode is found
+   * @throws ChecksumException if a potential barcode is found but does not pass its checksum
+   * @throws FormatException if a potential barcode is found but format is invalid
    */
   public abstract Result decodeRow(int rowNumber, BitArray row, Map<DecodeHintType,?> hints)
       throws NotFoundException, ChecksumException, FormatException;
